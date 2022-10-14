@@ -1,0 +1,24 @@
+{
+  "name": "encoder-node",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "techcoderx",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "async": "^3.2.4",
+    "axios": "^0.27.2",
+    "bs58": "^5.0.0",
+    "crypto-js": "^4.1.1",
+    "fluent-ffmpeg": "^2.1.2",
+    "hivecrypt": "^2.0.6",
+    "secp256k1": "^4.0.3",
+    "shelljs": "^0.8.5",
+    "socket.io-client": "^4.5.2",
+    "tus-js-client": "^3.0.1",
+    "wget-improved": "^3.3.1"
+  }
+}
