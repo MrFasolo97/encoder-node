@@ -22,7 +22,7 @@ socket.on('message',(msg) => {
         let signature = hivecryptPro.Signature.create(hivecryptPro.sha256(signThis),config.key).customToString()
         let payload = signThis+':'+signature
         console.log('Auth payload',payload)
-        axios.post(config.uploadEndpoint+'/loginsig',payload,{ headers: { 'content-type': 'text/plain' }}).then((authresponse) => {
+        axios.post(config.uploadEndpoint+'/loginsig',payload,{ headers: { 'Content-Type': 'text/plain' }}).then((authresponse) => {
             if (authresponse.data && authresponse.data.access_token) {
                 console.log('access_token',authresponse.data.access_token)
                 access_token = authresponse.data.access_token
