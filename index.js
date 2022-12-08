@@ -6,7 +6,7 @@ const wget = require('wget-improved')
 const tus = require('tus-js-client')
 const hivecryptPro = require('./uploader/src/hivecryptPro.js')
 const config = require('./config.js')
-const { getFFprobeVideo, getHlsBw, hlsEncode } = require('./uploader/src/encoderHelpers.js')
+const { getFFprobeVideo, hlsEncode, determineOutputs } = require('./uploader/src/encoderHelpers.js')
 const MB = 1048576
 
 let access_token = ''
@@ -64,14 +64,7 @@ socket.on('job',(newjob) => {
                 return socket.emit('joberror',{ id: newjob.id, error: 'remote encoder failed to ffprobe video info' })
 
             // same processing as local encoder
-            let outputResolutions = []
-            let sedge = Math.min(width,height)
-            for (let q in config.outputs)
-                if (getHlsBw(config.outputs[q]) && sedge >= config.outputs[q])
-                    outputResolutions.push(config.outputs[q])
-            if (outputResolutions.length === 0)
-                outputResolutions.push(config.outputs[config.outputs.length-1])
-            outputResolutions = outputResolutions.sort((a,b) => a-b)
+            let outputResolutions = determineOutputs(width,height,config.outputs)
 
             // Create folders
             fs.mkdirSync(config.dataDir+'/'+newjob.id)
