@@ -3,8 +3,6 @@ const config = {
     encoder: 'h264_videotoolbox',
     quality: '-q:v 54',
     threads: 8,
-    ffmpegPath: '/opt/homebrew/bin/ffmpeg',
-    ffprobePath: '/opt/homebrew/bin/ffprobe',
     outputs: [2160,1080,720],
     maxSizeMb: 1024,
     username: '',
