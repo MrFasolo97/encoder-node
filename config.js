@@ -1,5 +1,3 @@
-import path from 'path'
-
 const config = {
     authIdentifier: 'oneloveipfs_login',
     encoder: 'h264_videotoolbox',
