@@ -1,25 +1,27 @@
-const fs = require('fs')
-const io = require('socket.io-client')
-const axios = require('axios')
-const async = require('async')
-const wget = require('wget-improved')
-const tus = require('tus-js-client')
-const hivecryptPro = require('./uploader/src/hivecryptPro.js')
-const config = require('./config.js')
-const { getFFprobeVideo, hlsEncode, determineOutputs } = require('./uploader/src/encoderHelpers.js')
+import { mkdirSync, readdirSync, existsSync, createReadStream } from 'fs'
+import { connect } from 'socket.io-client'
+import Axios from 'axios'
+import { parallel } from 'async'
+import { download as _download } from 'wget-improved'
+import { Upload } from 'tus-js-client'
+import helpers from './uploader/src/encoderHelpers.js'
+const config = await import('./config.js')
+const { Signature, sha256 } = await import('./uploader/src/hivecryptPro.js')
+const { getFFprobeVideo, hlsEncode, determineOutputs } = helpers
 const MB = 1048576
 
+const axios = Axios.create()
 let access_token = ''
 let uploaded = 0
 let processed = 0
 
-let socket = io.connect(config.uploadEndpoint+'/encoderdaemon')
+let socket = connect(config.uploadEndpoint+'/encoderdaemon')
 socket.on('message',(msg) => {
     console.log('message',msg)
     generateMessageToSign(config.username,config.network,(e,signThis) => {
         if (e)
             throw new Error(e)
-        let signature = hivecryptPro.Signature.create(hivecryptPro.sha256(signThis),config.key).customToString()
+        let signature = Signature.create(sha256(signThis),config.key).customToString()
         let payload = signThis+':'+signature
         console.log('Auth payload',payload)
         axios.post(config.uploadEndpoint+'/loginsig',payload,{ headers: { 'Content-Type': 'text/plain' }}).then((authresponse) => {
@@ -44,7 +46,7 @@ socket.on('job',(newjob) => {
     console.log('New job',newjob)
     uploaded = 0
     processed = 0
-    let download = wget.download(config.tusdEndpoint+'/'+newjob.id,newjob.id)
+    let download = _download(config.tusdEndpoint+'/'+newjob.id,newjob.id)
     download.on('error', (err) => {
         console.log('Download failed',newjob.id,err)
     })
@@ -67,9 +69,9 @@ socket.on('job',(newjob) => {
             let outputResolutions = determineOutputs(width,height,config.outputs)
 
             // Create folders
-            fs.mkdirSync(config.dataDir+'/'+newjob.id)
+            mkdirSync(config.dataDir+'/'+newjob.id)
             for (let r in outputResolutions)
-                fs.mkdirSync(config.dataDir+'/'+newjob.id+'/'+outputResolutions[r]+'p')
+                mkdirSync(config.dataDir+'/'+newjob.id+'/'+outputResolutions[r]+'p')
 
             const ops = hlsEncode(
                 newjob.id, newjob.id,
@@ -100,13 +102,13 @@ socket.on('job',(newjob) => {
                 step: 'encode',
                 outputs: outputResolutions
             })
-            async.parallel(ops,(e) => {
+            parallel(ops,(e) => {
                 // post processing
                 let total = 0
                 let sprite = false
                 for (let o in outputResolutions)
-                    total += fs.readdirSync(config.dataDir+'/'+newjob.id+'/'+outputResolutions[o]+'p').length
-                if (fs.existsSync(config.dataDir+'/'+newjob.id+'/sprite.jpg')) {
+                    total += readdirSync(config.dataDir+'/'+newjob.id+'/'+outputResolutions[o]+'p').length
+                if (existsSync(config.dataDir+'/'+newjob.id+'/sprite.jpg')) {
                     total++
                     sprite = true
                 }
@@ -205,7 +207,7 @@ async function uploadOutputs(id, outputs = [], cb = () => {}) {
 }
 
 async function uploadOutput(id, output) {
-    let files = fs.readdirSync(config.dataDir+'/'+id+'/'+output+'p')
+    let files = readdirSync(config.dataDir+'/'+id+'/'+output+'p')
     for (let f in files)
         try {
             await uploadOne(id,output,config.dataDir+'/'+id+'/'+output+'p/'+files[f],files[f])
@@ -217,7 +219,7 @@ async function uploadOutput(id, output) {
 
 function uploadOne(id, output, dir = '', file = '') {
     return new Promise((rs,rj) => {
-        let upload = new tus.Upload(fs.createReadStream(dir),{
+        let upload = new Upload(createReadStream(dir),{
             endpoint: config.tusdEndpoint,
             retryDelays: [0,3000,5000,10000,20000],
             parallelUploads: config.uploadThreads,

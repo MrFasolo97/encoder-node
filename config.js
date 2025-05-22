@@ -1,3 +1,5 @@
+import path from 'path'
+
 const config = {
     authIdentifier: 'oneloveipfs_login',
     encoder: 'h264_videotoolbox',
@@ -12,7 +14,6 @@ const config = {
     tusdEndpoint: 'http://localhost:1080/files',
     uploadEndpoint: 'http://localhost:3000',
     uploadThreads: 5,
-    dataDir: __dirname+'/outputs'
+    dataDir: process.cwd()+'/outputs'
 }
-
-module.exports = config
+export default config

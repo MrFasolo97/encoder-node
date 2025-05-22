@@ -1,7 +1,7 @@
-const async = require('async')
-const fs = require('fs')
-const { getFFprobeVideo, hlsEncode, determineOutputs } = require('./uploader/src/encoderHelpers.js')
-const config = require('./config.js')
+import async from 'async'
+import fs from 'node:fs'
+const { getFFprobeVideo, hlsEncode, determineOutputs } = import('./uploader/src/encoderHelpers.js')
+const config = await import('./config.js')
 
 const vpath = process.argv[2]
 const dpath = process.argv[3]
